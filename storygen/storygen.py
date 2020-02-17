@@ -232,10 +232,10 @@ class Story:
     def get_temporal_story(self):
         #         Initialize all here!
         temporal_story = []
-        academic_standing_text = self.create_text("", "template", None)
-        adv_text = self.create_text("", "template", None)
-        credits_text = self.create_text("", "template", None)
-        specific_dem_text = self.create_text("", "template", None)
+        academic_standing_text = [self.create_text("", "template", None)]
+        adv_text = [self.create_text("", "template", None)]
+        credits_text = [self.create_text("", "template", None)]
+        specific_dem_text = [self.create_text("", "template", None)]
 
         academic_standing_text = self.get_academic_standing_text()
         if self.choices[7] == '1':
@@ -258,10 +258,10 @@ class Story:
 
     def get_outcome_story(self):
         outcome_story = []
-        outcome_intro_text = self.create_text("", "template", None)
-        adv_text = self.create_text("", "template", None)
-        credits_text = self.create_text("", "template", None)
-        specific_dem_text = self.create_text("", "template", None)
+        outcome_intro_text = [self.create_text("", "template", None)]
+        adv_text = [self.create_text("", "template", None)]
+        credits_text = [self.create_text("", "template", None)]
+        specific_dem_text = [self.create_text("", "template", None)]
 
         academic_standing_text = self.get_academic_standing_text()
         if self.choices[7] == '1':
@@ -271,7 +271,7 @@ class Story:
         if '1' in [self.choices[9], self.choices[10]]:
             credits_text = self.credits_text
 
-        if self.grad_ind == False and self.expected_grad_date != "":
+        if self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled != "":
             outcome_intro_text = [
                 self.create_text(self.student_name, "dynamic", "student_name"),
                 self.create_text(" is a ", "template", None),
@@ -280,46 +280,83 @@ class Story:
                 self.create_text(self.pronoun_2, "dynamic", "gender"),
                 self.create_text(" last semester enrolled was ", "template", None),
                 self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
+                self.create_text(", while ", "template", None),
+                self.create_text(self.pronoun, "dynamic", "gender"),
+                self.create_text(" was expected to graduate in ", "template", None),
+                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                self.create_text(". ", "template", None),
             ]
             if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
                 outcome_intro_text += [
-                    self.create_text(" and ", "template", None),
-                    self.create_text(self.pronoun_2, "dynamic", "gender"),
-                    self.create_text(" latest GPA is ", "template", None),
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" most recent GPA is ", "template", None),
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-            else:
-                outcome_intro_text += [
-                    self.create_text(". ", "template", None),
-                ]
-        elif self.grad_ind == False and self.expected_grad_date == "":
+        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled == "":
             outcome_intro_text = [
                 self.create_text(self.student_name, "dynamic", "student_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
                 self.create_text(" student who did not graduate yet and there is no information about ", "template", None),
                 self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" expected graduation date", "template", None),
+                self.create_text(" expected graduation date nor last semester enrolled. ", "template", None),
             ]
             if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
                 outcome_intro_text += [
-                    self.create_text(" and ", "template", None),
-                    self.create_text(self.pronoun_2, "dynamic", "gender"),
-                    self.create_text(" latest GPA is ", "template", None),
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" most recent GPA is ", "template", None),
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-            else:
-                outcome_intro_text += [
-                    self.create_text(". ", "template", None),
-                ]
-        else:
+        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled != "":
             outcome_intro_text = [
                 self.create_text(self.student_name, "dynamic", "student_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
-                self.create_text(" who was graduated after ", "template", None),
+                self.create_text(" student who did not graduate yet and there is no information about ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "gender"),
+                self.create_text(" expected graduation date and ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "gender"),
+                self.create_text(" last semester enrolled was ", "template", None),
+                self.create_text(self.last_semester_enrolled, "dynamic", None),
+                self.create_text(". ", "template", None),
+            ]
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
+                outcome_intro_text += [
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" most recent GPA is ", "template", None),
+                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
+                    self.create_text(". ", "template", None),
+                ]
+        elif self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled == "":
+            outcome_intro_text = [
+                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(" is a ", "template", None),
+                self.create_text(self.gender, "dynamic", "gender"),
+                self.create_text(" student who did not graduate yet and ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "gender"),
+                self.create_text(" last semester enrolled was ", "template", None),
+                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
+                self.create_text(", while ", "template", None),
+                self.create_text(self.pronoun, "dynamic", "gender"),
+                self.create_text(" was expected to graduate in ", "template", None),
+                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                self.create_text(". ", "template", None),
+            ]
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
+                outcome_intro_text += [
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" most recent GPA is ", "template", None),
+                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
+                    self.create_text(". ", "template", None),
+                ]
+        elif self.grad_ind == True:
+            outcome_intro_text = [
+                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(" is a ", "template", None),
+                self.create_text(self.gender, "dynamic", "gender"),
+                self.create_text(" student who was graduated after ", "template", None),
                 self.create_text(self.p.number_to_words(self.semester_count), "dynamic", "semester_count"),
                 self.create_text(" semesters in ", "template", None),
                 self.create_text(self.graduation_date, "dynamic", "graduation_date"),
@@ -361,7 +398,7 @@ class Story:
     def get_course_work(self):
         course_work = defaultdict(list)
         core_course_work = defaultdict(list)
-        lowest_grade = 'A'
+        lowest_grade = ''
         # Summer semesters count
         summer_semesters_set = set()
         semesters_names = set()
@@ -1166,7 +1203,9 @@ class Story:
                 additional_dem_info = [self.create_text("", 'template', None)]
         specific_dem_text += additional_dem_info
         #         pprint(additional_dem_info)
-
+        if all(item == '0' for item in self.choices[0:6]):
+            specific_dem_text = self.dem_text
+        print(specific_dem_text)
         return specific_dem_text
 
     def get_specific_intro_text(self):  # if admission_population in args
@@ -1687,8 +1726,10 @@ class Story:
 
     def get_lowest_text(self):
         lowest_text = [self.create_text("", "template", None)]
-        if self.lowest_grade == 'F' or self.lowest_grade == 'D':
-            lowest_text = [self.create_text("", "template", None)]
+        if self.lowest_grade == '':
+            return lowest_text
+        elif self.lowest_grade == 'F' or self.lowest_grade == 'D':
+            return lowest_text 
         elif self.lowest_grade != 'A':
             lowest_text = [
                 self.create_text("Throughout ", "template", None),
@@ -1741,9 +1782,13 @@ class Story:
                 self.create_text(self.pronoun_2, "dynamic", "gender"),
                 self.create_text(" last semester enrolled was ", "template", None),
                 self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
+                self.create_text(", while ", "template", None),
+                self.create_text(self.pronoun, "dynamic", "gender"),
+                self.create_text(" was expected to graduate in ", "template", None),
+                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
                 self.create_text(". ", "template", None),
             ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
                 grad_text += [
                     self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
                     self.create_text(" latest GPA is ", "template", None),
@@ -1757,14 +1802,44 @@ class Story:
                 self.create_text(self.pronoun_2, "dynamic", "gender"),
                 self.create_text(" expected graduation date. ", "template", None),
             ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
                 grad_text += [
                     self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
                     self.create_text(" latest GPA is ", "template", None),
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-        else:
+        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled != "":
+            grad_text = [
+                self.create_text(self.pronoun, "dynamic", "gender"),
+                self.create_text(" did not graduate yet and ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "gender"),
+                self.create_text(" last semester enrolled was ", "template", None),
+                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
+                self.create_text(". ", "template", None),
+            ]
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
+                grad_text += [
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" latest GPA is ", "template", None),
+                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
+                    self.create_text(". ", "template", None),
+                ]
+        elif self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled == "":
+            grad_text = [
+                self.create_text(self.pronoun, "dynamic", "gender"),
+                self.create_text(" did not graduate yet and there is no information about ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "gender"),
+                self.create_text(" last semester enrolled. ", "template", None),
+            ]
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
+                grad_text += [
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" latest GPA is ", "template", None),
+                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
+                    self.create_text(". ", "template", None),
+                ]
+        elif self.grad_ind == True:
             grad_text = [
                 self.create_text(self.pronoun, "dynamic", "gender"),
                 self.create_text(" graduated after ", "template", None),
@@ -1775,6 +1850,19 @@ class Story:
                 self.create_text(str(self.graduation_gpa), "dynamic", "graduation_gpa"),
                 self.create_text(". ", "template", None),
             ]
+        else:
+            grad_text = [
+                self.create_text(" There is no information about ", "template", None),
+                self.create_text(self.pronoun_2, "dynamic", "semester_count"),
+                self.create_text(" graduation status nor graduation date. ", "template", None),
+            ]
+            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
+                grad_text += [
+                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
+                    self.create_text(" latest GPA is ", "template", None),
+                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
+                    self.create_text(". ", "template", None),
+                ]
         return grad_text
 
     def get_credits_text(self):
@@ -1871,4 +1959,3 @@ class Story:
         for k, v in std_story.items():
             complete_story += ''.join(item['text'] for item in v)
         return complete_story
-
