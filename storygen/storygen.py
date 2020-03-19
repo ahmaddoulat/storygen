@@ -1,6 +1,7 @@
 import math
 from collections import defaultdict, OrderedDict
 import inflect
+from datetime import date
 
 
 class Story:
@@ -34,17 +35,17 @@ class Story:
         ) = self.get_course_work()
 
         (self.first_semester_adv, self.first_advisor_period) = self.get_advisor_first_semester()
-        #         (self.advisors_count, self.first_advisor_semester) = self.get_advisors_info()
         (self.age_admitted, self.primary_ethnicity, self.gender, self.current_age) = self.get_demographic_data()
         self.student_name = self.data["name"]
+        self.first_name = self.data['first_name']
+        self.last_name = self.data['last_name']
         (self.pronoun, self.pronoun_2, self.pronoun_3) = self.get_pronouns()
         self.major = self.get_major()
         self.enrollment_date = self.get_enrollment_date()
         self.semester_count = len(self.semesters_list) - self.summer_semesters_count
-        self.expected_grad_date = self.get_expected_grad()
+        self.expected_grad_date, self.tense = self.get_expected_grad()
         (self.grad_ind, self.graduation_date, self.last_semester_enrolled) = self.get_garduation_status()
         (self.gpa_ind, self.graduation_gpa) = self.get_gpa()
-#         self.last_sem_enrolled = self.get_last_sem_enrolled()
         (self.failed_course, self.semester_failed_course, self.new_grade_f,
          self.semester_passed_course_f) = self.get_failed_then_passed()
         (self.withdrawn_course, self.semester_withdrawn_course, self.new_grade_w,
@@ -166,7 +167,7 @@ class Story:
             self.create_text("During ", "template", None),
             self.create_text(self.pronoun_2, "dynamic", "gender"),
             self.create_text(" enrollment, ", "template", None),
-            self.create_text(self.student_name, "template", "name"),
+            self.create_text(self.first_name, "template", "first_name"),
             self.create_text(" was", "template", None),
         ]
 
@@ -212,7 +213,7 @@ class Story:
                 self.create_text("Throughout ", "template", None),
                 self.create_text(self.pronoun_2, "dynamic", "gender_desc"),
                 self.create_text(" enrollment, ", "template", None),
-                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(self.first_name, "dynamic", "first_name"),
                 self.create_text(" has ", "template", None),
                 self.create_text(self.p.number_to_words(self.advisor_count), "dynamic", "advisor_count"),
                 self.create_text(" advisors and ", "template", None),
@@ -271,21 +272,31 @@ class Story:
         if '1' in [self.choices[9], self.choices[10]]:
             credits_text = self.credits_text
 
-        if self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled != "":
-            outcome_intro_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
-                self.create_text(" is a ", "template", None),
-                self.create_text(self.gender, "dynamic", "gender"),
-                self.create_text(" student who did not graduate yet and ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled was ", "template", None),
-                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
-                self.create_text(", while ", "template", None),
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" was expected to graduate in ", "template", None),
-                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
-                self.create_text(". ", "template", None),
-            ]
+        if self.grad_ind == False and self.expected_grad_date != "":
+            if self.tense == 'future':
+                outcome_intro_text = [
+                    self.create_text(self.first_name, "dynamic", "first_name"),
+                    self.create_text(" ", "template", None),
+                    self.create_text(self.last_name, "dynamic", "last_name"),
+                    self.create_text(" is a ", "template", None),
+                    self.create_text(self.gender, "dynamic", "gender"),
+                    self.create_text(" student who did not graduate yet and expected to graduate in ", "template", None),
+                    self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                    self.create_text(". ", "template", None),
+                ]
+            elif self.tense == 'past':
+                outcome_intro_text = [
+                    self.create_text(self.first_name, "dynamic", "first_name"),
+                    self.create_text(" ", "template", None),
+                    self.create_text(self.last_name, "dynamic", "last_name"),
+                    self.create_text(" is a ", "template", None),
+                    self.create_text(self.gender, "dynamic", "gender"),
+                    self.create_text(" student who did not graduate yet while ", "template", None),
+                    self.create_text(self.pronoun.lower(), "dynamic", "gender"),
+                    self.create_text(" was expected to gradute in ", "template", None),
+                    self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                    self.create_text(". ", "template", None),
+                ]
             if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
                 outcome_intro_text += [
                     self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
@@ -293,56 +304,16 @@ class Story:
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled == "":
+        elif self.grad_ind == False and self.expected_grad_date == "":
             outcome_intro_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(self.first_name, "dynamic", "first_name"),
+                self.create_text(" ", "template", None),
+                self.create_text(self.last_name, "dynamic", "last_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
                 self.create_text(" student who did not graduate yet and there is no information about ", "template", None),
                 self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" expected graduation date nor last semester enrolled. ", "template", None),
-            ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
-                outcome_intro_text += [
-                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
-                    self.create_text(" most recent GPA is ", "template", None),
-                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
-                    self.create_text(". ", "template", None),
-                ]
-        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled != "":
-            outcome_intro_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
-                self.create_text(" is a ", "template", None),
-                self.create_text(self.gender, "dynamic", "gender"),
-                self.create_text(" student who did not graduate yet and there is no information about ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" expected graduation date and ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled was ", "template", None),
-                self.create_text(self.last_semester_enrolled, "dynamic", None),
-                self.create_text(". ", "template", None),
-            ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
-                outcome_intro_text += [
-                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
-                    self.create_text(" most recent GPA is ", "template", None),
-                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
-                    self.create_text(". ", "template", None),
-                ]
-        elif self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled == "":
-            outcome_intro_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
-                self.create_text(" is a ", "template", None),
-                self.create_text(self.gender, "dynamic", "gender"),
-                self.create_text(" student who did not graduate yet and ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled was ", "template", None),
-                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
-                self.create_text(", while ", "template", None),
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" was expected to graduate in ", "template", None),
-                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
-                self.create_text(". ", "template", None),
+                self.create_text(" expected graduation date. ", "template", None),
             ]
             if self.choices[8] == '1' and str(self.recent_gpa) != 'nan':
                 outcome_intro_text += [
@@ -353,12 +324,12 @@ class Story:
                 ]
         elif self.grad_ind == True:
             outcome_intro_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(self.first_name, "dynamic", "first_name"),
+                self.create_text(" ", "template", None),
+                self.create_text(self.last_name, "dynamic", "last_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
-                self.create_text(" student who was graduated after ", "template", None),
-                self.create_text(self.p.number_to_words(self.semester_count), "dynamic", "semester_count"),
-                self.create_text(" semesters in ", "template", None),
+                self.create_text(" student who was graduated in ", "template", None),
                 self.create_text(self.graduation_date, "dynamic", "graduation_date"),
                 self.create_text(" with a GPA of ", "template", None),
                 self.create_text(str(self.graduation_gpa), "dynamic", "graduation_gpa"),
@@ -407,13 +378,13 @@ class Story:
         found_outcome = (False if self.data['outcome'] == None else True)
         # Attempted credits
         attempted_credits = 0.0
-        if found_outcome:
-            attempted_credits = self.data['outcome']['credits_attempted']
+#         if found_outcome:
+#             attempted_credits = self.data['outcome']['credits_attempted']
         # Passed credits
         passed_credits_count = 0.0
         passed_credits = set()
-        if found_outcome:
-            passed_credits_count = self.data['outcome']['credits_passed']
+#         if found_outcome:
+#             passed_credits_count = self.data['outcome']['credits_passed']
         # Withdrawn credits
         withdrawn_credits_count = 0.0
         withdrawn_credits = set()
@@ -426,8 +397,8 @@ class Story:
         # Transferred credits
         transferred_courses_count = 0.0
         transferred_courses = set()
-        if found_outcome:
-            transferred_courses_count = self.data['outcome']['transfer_credits_passed']
+#         if found_outcome:
+#             transferred_courses_count = self.data['outcome']['transfer_credits_passed']
         # Academic standing
         academic_standing = []
         good_standing_sem_count = 0
@@ -465,16 +436,16 @@ class Story:
                     if course['final_grade'] > lowest_grade:
                         lowest_grade = course['final_grade']
                 # Getting attempted credits
-                if not found_outcome:
-                    if course['transfer_course_ind'] == 'N':
-                        if math.isnan(course['credits_attempted']) == False:
-                            attempted_credits = attempted_credits + course['credits_attempted']
+#                 if not found_outcome:
+                if course['transfer_course_ind'] == 'N':
+                    if math.isnan(course['credits_attempted']) == False:
+                        attempted_credits = attempted_credits + course['credits_attempted']
                 # Getting passed credits and count
-                if not found_outcome:
-                    if course['transfer_course_ind'] == 'N':
-                        if math.isnan(course['credits_passed']) == False:
-                            passed_credits_count = passed_credits_count + course['credits_passed']
-                            passed_credits.add(course['course_title_short'].title())
+#                 if not found_outcome:
+                if course['transfer_course_ind'] == 'N':
+                    if math.isnan(course['credits_passed']) == False:
+                        passed_credits_count = passed_credits_count + course['credits_passed']
+                        passed_credits.add(course['course_title_short'].title())
                 # Getting withdrawn credits and count
                 if course['transfer_course_ind'] == 'N' and course['final_grade'] == 'W':
                     withdrawn_credits_count = withdrawn_credits_count + course['credits_attempted']
@@ -587,23 +558,41 @@ class Story:
         return self.data['semesters'][0]['courses'][0]['academic_period_desc']
 
     def get_expected_grad(self):
-        def suffix(d):
-            return 'th' if 11 <= d <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(d % 10, 'th')
-
-        def custom_strftime(format, t):
-            return t.strftime(format).replace('{S}', str(t.day) + suffix(t.day))
-
+        today = date.today()
+        current_year = today.year
+        
+        semester_names = {
+            'Dec': "Spring ",
+            'May': "First Summer ",
+            'Jun': "Second Summer ",
+            'Aug': "Fall "
+        }
+        
+        months_numbers = {
+            'Dec': 12,
+            'May': 5,
+            'Jun': 6,
+            'Aug': 8
+        }
+        
+        
         try:
-            date = self.data['semesters'][0]['semesterInfo']['expected_graduation_date']
-            if len(date) > 9:
-                year = int(date[:4])
-                month = int(date[5:7])
-                day = int(date[8:11])
-                return custom_strftime('%B {S}, %Y', dt(year, month, day))
+            temp_date = self.data['semesters'][0]['semesterInfo']['expected_graduation_date'].split('-')
+            grad_year = '20' + str(temp_date[2])
+            grad_month = months_numbers[temp_date[1]]
+            grad_day = temp_date[0]
+            
+            grad_date = date(int(grad_year), int(grad_month), int(grad_day))
+            
+            if grad_date > today:
+                return semester_names[temp_date[1]] + '20' + str(temp_date[2]), 'future'
             else:
-                return date
+                return semester_names[temp_date[1]] + '20' + str(temp_date[2]), 'past'
+            
+#             return semester_names[temp_date[1]] + '20' + str(temp_date[2])
+
         except Exception as e:
-            return ""
+            return "", ""
 
     def get_garduation_status(self):
         def suffix(d):
@@ -684,7 +673,9 @@ class Story:
         dem_text = [self.create_text("", "template", None)]
         if self.age_admitted != 'zero':
             dem_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(self.first_name, "dynamic", "first_name"),
+                self.create_text(" ", "template", None),
+                self.create_text(self.last_name, "dynamic", "last_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
                 self.create_text(" student who was admitted at the age of ", "template", None),
@@ -699,7 +690,9 @@ class Story:
             ]
         else:
             dem_text = [
-                self.create_text(self.student_name, "dynamic", "student_name"),
+                self.create_text(self.first_name, "dynamic", "first_name"),
+                self.create_text(" ", "template", None),
+                self.create_text(self.last_name, "dynamic", "last_name"),
                 self.create_text(" is a ", "template", None),
                 self.create_text(self.gender, "dynamic", "gender"),
                 self.create_text(" student who was first enrolled in ", "template", None),
@@ -715,7 +708,9 @@ class Story:
         if '1' in [self.choices[4], self.choices[5], self.choices[6]]:
             if self.admission_population != "" and self.age_admitted != 'zero':
                 specific_dem_text = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
+                    self.create_text(" ", "template", None),
+                    self.create_text(self.last_name, "dynamic", "last_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.gender, "dynamic", "gender"),
                     self.create_text(" student who was admitted as a ", "template", None),
@@ -733,7 +728,9 @@ class Story:
             ###############################################################################################
             elif self.age_admitted != 'zero':
                 specific_dem_text = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
+                    self.create_text(" ", "template", None),
+                    self.create_text(self.last_name, "dynamic", "last_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.gender, "dynamic", "gender"),
                     self.create_text(" student who was admitted at the age of ", "template", None),
@@ -748,7 +745,9 @@ class Story:
                 ]
             else:
                 specific_dem_text = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
+                    self.create_text(" ", "template", None),
+                    self.create_text(self.last_name, "dynamic", "last_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.gender, "dynamic", "gender"),
                     self.create_text(" student who was first enrolled in ", "template", None),
@@ -762,7 +761,7 @@ class Story:
         if self.choices[3] == '1' and all(item == '0' for item in self.choices[0:3]):  # 0001
             if self.primary_ethnicity != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(". ", "template", None),
@@ -774,7 +773,7 @@ class Story:
             if self.current_age != "":
                 additional_dem_info = [
                     self.create_text("Currently, ", "template", None),
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is ", "template", None),
                     self.create_text(self.p.number_to_words(self.current_age), "dynamic", "current_age"),
                     self.create_text(" years old. ", "template", None),
@@ -785,7 +784,7 @@ class Story:
                 item == '0' for item in self.choices[2:4]):  # 0100
             if self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text("\'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". ", "template", None),
@@ -795,7 +794,7 @@ class Story:
         elif self.choices[0] == '1' and all(item == '0' for item in self.choices[1:4]):  # 1000
             if self.citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
@@ -806,7 +805,7 @@ class Story:
                 item == '0' for item in self.choices[1:3]):  # 1001
             if self.primary_ethnicity != "" and self.citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -815,14 +814,14 @@ class Story:
                 ]
             elif self.citizenship_desc == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(". ", "template", None),
                 ]
             elif self.primary_ethnicity == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
@@ -833,7 +832,7 @@ class Story:
             3] == '0':  # 1010
             if self.citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -844,14 +843,14 @@ class Story:
                 ]
             elif self.citizenship_desc == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is now ", "template", None),
                     self.create_text(self.p.number_to_words(self.current_age), "dynamic", "current_age"),
                     self.create_text(" years old. ", "template", None),
                 ]
             elif self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
@@ -861,7 +860,7 @@ class Story:
         elif all(item == '1' for item in self.choices[0:2]) and all(item == '0' for item in self.choices[2:4]):  # 1100
             if self.citizenship_desc != "" and self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -872,14 +871,14 @@ class Story:
                 ]
             elif self.citizenship_desc == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" \'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". ", "template", None),
                 ]
             elif self.nation_of_citizenship_desc == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
@@ -889,7 +888,7 @@ class Story:
         elif all(item == '1' for item in self.choices[0:2]) and all(item == '0' for item in self.choices[2:4]):  # 1101
             if self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -902,7 +901,7 @@ class Story:
                 ]
             elif self.primary_ethnicity == "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -913,7 +912,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc == "" and self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(" and ", "template", None),
@@ -924,7 +923,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -933,21 +932,21 @@ class Story:
                 ]
             elif self.primary_ethnicity != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text("student. ", "template", None),
                 ]
             elif self.citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
                 ]
             elif self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" \'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". ", "template", None),
@@ -957,7 +956,7 @@ class Story:
         elif all(item == '1' for item in self.choices[0:2]) and all(item == '0' for item in self.choices[2:4]):  # 1110
             if self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -973,7 +972,7 @@ class Story:
                 ]
             elif self.citizenship_desc == "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" \'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". Currently, ", "template", None),
@@ -985,7 +984,7 @@ class Story:
                 ]
             elif self.citizenship_desc != "" and self.nation_of_citizenship_desc == "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and currently ", "template", None),
@@ -997,7 +996,7 @@ class Story:
                 ]
             elif self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -1008,21 +1007,21 @@ class Story:
                 ]
             elif self.citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
                 ]
             elif self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" \'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". ", "template", None),
                 ]
             elif self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is ", "template", None),
                     self.create_text(self.p.number_to_words(self.current_age), "dynamic", "current_age"),
                     self.create_text(" years old now. ", "template", None),
@@ -1033,7 +1032,7 @@ class Story:
         elif all(item == '1' for item in self.choices[0:4]):  # 1111
             if self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -1050,7 +1049,7 @@ class Story:
                 ]
             elif self.primary_ethnicity == "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -1065,7 +1064,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc == "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(" student and ", "template", None),
@@ -1080,7 +1079,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc == "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -1093,7 +1092,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -1106,7 +1105,7 @@ class Story:
                 ]
             elif self.primary_ethnicity == "" and self.citizenship_desc == "" and self.nation_of_citizenship_desc != "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text("\'s nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". Currently, ", "template", None),
@@ -1117,7 +1116,7 @@ class Story:
                 ]
             elif self.primary_ethnicity == "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc == "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and currently ", "template", None),
@@ -1128,7 +1127,7 @@ class Story:
                 ]
             elif self.primary_ethnicity == "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen and ", "template", None),
@@ -1139,7 +1138,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc == "" and self.nation_of_citizenship_desc == "" and self.current_age != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(" student and currently ", "template", None),
@@ -1150,7 +1149,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc != "" and self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -1163,7 +1162,7 @@ class Story:
                 ]
             elif self.primary_ethnicity != "" and self.citizenship_desc != "" and self.nation_of_citizenship_desc == "" and self.current_age == "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(", ", "template", None),
@@ -1172,21 +1171,21 @@ class Story:
                 ]
             elif self.primary_ethnicity != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.primary_ethnicity, "dynamic", "primary_ethnicity"),
                     self.create_text(" student. ", "template", None),
                 ]
             elif self.citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is a ", "template", None),
                     self.create_text(self.citizenship_desc, "dynamic", "citizenship_desc"),
                     self.create_text(" citizen. ", "template", None),
                 ]
             elif self.nation_of_citizenship_desc != "":
                 additional_dem_info = [
-                    self.create_text(self.student_name, "dynamic", "student_name"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text("\'s  nation of citizenship is ", "template", None),
                     self.create_text(self.nation_of_citizenship_desc.title(), "dynamic", "nation_of_citizenship_desc"),
                     self.create_text(". ", "template", None),
@@ -1194,7 +1193,7 @@ class Story:
             elif self.current_age != "":
                 additional_dem_info = [
                     self.create_text(". Currently, ", "template", None),
-                    self.create_text(self.student_name, "dynamic", "gender"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is ", "template", None),
                     self.create_text(self.p.number_to_words(self.current_age), "dynamic", "current_age"),
                     self.create_text(" years old. ", "template", None),
@@ -1205,7 +1204,7 @@ class Story:
         #         pprint(additional_dem_info)
         if all(item == '0' for item in self.choices[0:6]):
             specific_dem_text = self.dem_text
-        print(specific_dem_text)
+#         print(specific_dem_text)
         return specific_dem_text
 
     def get_specific_intro_text(self):  # if admission_population in args
@@ -1686,7 +1685,7 @@ class Story:
             elif self.current_age != "":
                 additional_dem_info = [
                     self.create_text("Currently, ", "template", None),
-                    self.create_text(self.student_name, "dynamic", "gender"),
+                    self.create_text(self.first_name, "dynamic", "first_name"),
                     self.create_text(" is ", "template", None),
                     self.create_text(self.p.number_to_words(self.current_age), "dynamic", "current_age"),
                     self.create_text(" years old. ", "template", None),
@@ -1775,19 +1774,25 @@ class Story:
 
     def get_grad_text(self):
         grad_text = [self.create_text("", "template", None)]
-        if self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled != "":
-            grad_text = [
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" did not graduate yet and ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled was ", "template", None),
-                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
-                self.create_text(", while ", "template", None),
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" was expected to graduate in ", "template", None),
-                self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
-                self.create_text(". ", "template", None),
-            ]
+        if self.grad_ind == False and self.expected_grad_date != "":
+            if self.tense == 'future':
+                grad_text = [
+                    self.create_text(self.pronoun, "dynamic", "gender"),
+                    self.create_text(" did not graduate yet and expected to graduate in ", "template", None),
+                    self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                    self.create_text(". ", "template", None),
+                ]
+                
+            else:
+                grad_text = [
+                    self.create_text(self.pronoun, "dynamic", "gender"),
+                    self.create_text(" did not graduate yet while ", "template", None),
+                    self.create_text(self.pronoun.lower(), "dynamic", "gender"),
+                    self.create_text(" was expected to gradute in ", "template", None),
+                    self.create_text(self.expected_grad_date, "dynamic", "expected_grad_date"),
+                    self.create_text(". ", "template", None),
+                ]
+                
             if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
                 grad_text += [
                     self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
@@ -1795,7 +1800,8 @@ class Story:
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled == "":
+                
+        elif self.grad_ind == False and self.expected_grad_date == "":
             grad_text = [
                 self.create_text(self.pronoun, "dynamic", "gender"),
                 self.create_text(" did not graduate yet and there is no information about ", "template", None),
@@ -1809,42 +1815,10 @@ class Story:
                     self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
                     self.create_text(". ", "template", None),
                 ]
-        elif self.grad_ind == False and self.expected_grad_date == "" and self.last_semester_enrolled != "":
-            grad_text = [
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" did not graduate yet and ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled was ", "template", None),
-                self.create_text(self.last_semester_enrolled, "dynamic", "last_semester_enrolled"),
-                self.create_text(". ", "template", None),
-            ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
-                grad_text += [
-                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
-                    self.create_text(" latest GPA is ", "template", None),
-                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
-                    self.create_text(". ", "template", None),
-                ]
-        elif self.grad_ind == False and self.expected_grad_date != "" and self.last_semester_enrolled == "":
-            grad_text = [
-                self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" did not graduate yet and there is no information about ", "template", None),
-                self.create_text(self.pronoun_2, "dynamic", "gender"),
-                self.create_text(" last semester enrolled. ", "template", None),
-            ]
-            if self.choices[8] == '1' and str(self.recent_gpa) != 'nan' and self.recent_gpa != 0:
-                grad_text += [
-                    self.create_text(self.pronoun_2.title(), "dynamic", "gender"),
-                    self.create_text(" latest GPA is ", "template", None),
-                    self.create_text(str(self.recent_gpa), "dynamic", "CGPA"),
-                    self.create_text(". ", "template", None),
-                ]
         elif self.grad_ind == True:
             grad_text = [
                 self.create_text(self.pronoun, "dynamic", "gender"),
-                self.create_text(" graduated after ", "template", None),
-                self.create_text(self.p.number_to_words(self.semester_count), "dynamic", "semester_count"),
-                self.create_text(" semesters in ", "template", None),
+                self.create_text(" graduated in ", "template", None),
                 self.create_text(self.graduation_date, "dynamic", "graduation_date"),
                 self.create_text(" with a GPA of ", "template", None),
                 self.create_text(str(self.graduation_gpa), "dynamic", "graduation_gpa"),
