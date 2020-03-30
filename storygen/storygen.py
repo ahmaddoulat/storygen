@@ -577,7 +577,7 @@ class Story:
         
         
         try:
-            temp_date = self.data['semesters'][0]['semesterInfo']['expected_graduation_date'].split('-')
+            temp_date = self.data['semesters'][-1]['semesterInfo']['expected_graduation_date'].split('-')
             grad_year = '20' + str(temp_date[2])
             grad_month = months_numbers[temp_date[1]]
             grad_day = temp_date[0]
